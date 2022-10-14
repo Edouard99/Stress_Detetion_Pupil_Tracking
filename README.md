@@ -32,7 +32,7 @@ Among the measures, the dataset contains pupil size measures of 17 subjects from
 The following figure is the evolution of the normalized pupil diameter as a function of time.
 
 <p align="center">
-  <img alt="ECG Sample" title="ECG Sample" src="./Media/ECG.PNG">
+  <img alt="ECG Sample" title="ECG Sample" src="./Media/experiment_presentation.PNG">
 </p>
 
 
@@ -41,52 +41,49 @@ The following figure is the evolution of the normalized pupil diameter as a func
 
 The Preprocessing of the data is done from the <a href="https://www.researchgate.net/profile/Marco-Pedrotti-2/publication/266613485_PUPILLARY_DATA_-_Automatic_stress_classification_with_pupil_diameter_analysis/data/543532a70cf2bf1f1f282679/data.zip?origin=publication_list">raw data</a> using the notebooks <a href="./PD ds creator.ipynb">PD ds creator.ipynb</a>.
 
-The pupil diameter can be very different from people to people, in order to normalize my data I chose a baseline moment, I computed the mean pupil diameter on this baseline moment and I computed the ratio :
+The training has been done with a cross-validation process. I extracted features from samples of 40s with a 1s step from every recording, these samples were coupled with a label : 
+  * for t0 and t1 label=0 as non-stressed
+  * for t2, t3 and t4 label=1 as stressed
 
-$$ Pd_{normalized}(t)= \frac{Pd(t)}{\overline{Pd_{Baseline}}}$$
-
-I chose the first session of driving as it induces a "normal situation", not specially stressing but more than a "doing nothing situation".
-
-The Preprocessing of the data is done from the WESAD dataset raw data using the notebooks <a href="./Dataset creator.ipynb">Dataset Creator.ipynb</a> (for Training dataset) \cite and <a href="./Testing ds creator.ipynb">Testing ds creator.ipynb</a>(for testing dataset)
-
-
-
-The exact computation of these features is detailled in the WESAD paper [[1]](#1) and in the <a href="./DataPreProcessing Detail.pdf">joined pdf</a>. The computation is also detailled in the comments of the code.
-
-The training has been done with a cross-validation process. I extracted features from samples of 20s with a 1s step from every recording, these samples were coupled with a label : 1=neutral ; 2=stress ; 3=amusement ; 4=meditation. As ECG is very person dependant, I selected a 90s of the baseline (neutral state), extracted the features and for every 20s sample I divided the features of the sample by the features of the baseline to have a comparison of the sample with a neutral moment from the baseline.
 
 <p align="center">
-  <img alt="Features Extraction" title="Features Extraction" src="./Media/features.PNG" >
+  <img alt="ECG Sample" title="ECG Sample" src="./Media/experiment_classification.PNG">
 </p>
 
-I split the data of the 15 subjects into training, validation and testing to avoid overfitting (as my features extracted from 20s samples with a sliding windows picking training and validation/testing data on a same subject would cause overfitting).
-Subjects for training and validation has been permuted as I planned to use K-fold cross validation (2 subjects in validation, 12 in training), so 91 possible datasets. I selected subject 17 to be my testing subject and I never included this subject in the creation of the fold datasets.
+
+The pupil diameter (Pd) can be very different from people to people, in order to normalize my data I chose a baseline moment. I chose the first session of driving for baseline as it induces a "normal situation", not specially stressing but more than a "doing nothing situation". I computed the mean pupil diameter on the complete baseline signal. Then I computed :
+
+$$ Pd_{normalized}(t)= Pd(t)-\overline{Pd_{Baseline}}$$
+
+Then from each 40s (2000 points) signal, I extracted a 125 points feature vector by applying discrete wavelet transform with 4 level and with Haar's window. Finally each 125 points feature vector for learning with the average mean and average standard deviation of all the 125 vectors in the dataset. By doing this we ensure that our dataset is normalized.
 
 <p align="center">
-  <img alt="Kfold Datasets" title="Kfold Datasets" src="./Media/Dataset kfold.PNG" >
+  <img alt="ECG Sample" title="ECG Sample" src="./Media/pre_processing.PNG">
 </p>
 
-Finally for each created Training dataset, I have chosen to discard incorrect data (example :  2s between 2 peaks is not biologically possible) due to malfunctioning of sensor creating troubles in the peak detection. I also have chosen to balance the data set to have 50\% of stress data and 50\% of non-stress data, to improve learning.
+
+I split the data of 29 subjects (13 from control group and 16 from experimental group) into training, validation and testing to avoid overfitting (as my features extracted from 40s samples with a sliding windows picking training and validation/testing data on a same subject would cause overfitting).
+Subjects for training and validation has been permuted as I planned to use K-fold cross validation (2 subjects (1 control and 1 experimental) in validation, 27 in training (12 control and 15 experimental)), and I created 195 datasets. I selected subject 12 to be my testing subject and I never included this subject in the creation of the fold datasets.
 
 <p align="center">
-  <img alt="Balancing Datasets" title="Balancing Datasets" src="./Media/balancing.PNG" >
+  <img alt="Kfold Datasets" title="Kfold Datasets" src="./Media/cross_validation.PNG" >
 </p>
 
 ## Model and Training
 
-My model is a Full Connected Neural Network. Each Full Connected (FC) layer is followed by a Batch Normalization layer, a Dropout(p= 0.5) layer and a LeakyRelu (a=0.2) layer. <br> The size of these layer decreases from 128 &#8594; 64 &#8594; 16 &#8594; 4 &#8594; 1. The final FC layer is followed by a Sigmoid function in order to obtain an output &#8712; [0;1]. 
+My model is a Full Connected Neural Network. Each Full Connected (FC) layer is followed by a Batch Normalization layer, a Dropout(p= 0.4) layer and a LeakyRelu (a=0.2) layer. <br> The size of these layer decreases from 128 &#8594; 64 &#8594; 16 &#8594; 4 &#8594; 1. The final FC layer is followed by a Sigmoid function in order to obtain an output &#8712; [0;1]. 
 
-The input size is 12 and the output size is 1. An output > *a-given-threshold* is considered as a stress state.
+The input size is 125 and the output size is 1. An output > *a-given-threshold* is considered as a stress state.
 
 <p align="center">
-  <img alt="Neural Network Architecture" title="Neural Network Architecture" src="./Media/Network.PNG" >
+  <img alt="Neural Network Architecture" title="Neural Network Architecture" src="./Media/network.PNG" >
 </p>
 
-For each fold (of the 91-fold) the model has been trained with :
+For each fold (of the 195-fold) the model has been trained with :
 
 &#8594; **Loss Function** = Binary Cross Entropy <br>
-&#8594; **Epochs** = 15 <br>
-&#8594; **Batchsize** = 32 <br>
+&#8594; **Epochs** = 250 <br>
+&#8594; **Batchsize** = 256 <br>
 &#8594; **Learning rate** = 0.0001 <br>
 &#8594; **Optimizer** = Adam(learning rate,beta1=0.9,beta2=0.999) <br>
 
@@ -94,10 +91,7 @@ For each fold training the best model has been saved (based on validation set lo
 
 ## Cross Validation Results
 
-Confusion Matrix used :
-
-* A 2x2 confusion matrix with Stress/No stress as ground truth and Stress/No stress as prediction. This confusion matrix is computed from the validation set and the values in the confusion matrix represent a the % of the data of the validation set.
-* A 2x4 confusion matrix with Emotional state (Neutral,Stress,Amusement,Relax) as ground truth and Stress/No stress as prediction. This confusion matrix is computed from the validation set and the values in the confusion matrix represent a the % of the data of the validation set.
+Confusion Matrix used is a 2x2 confusion matrix with Stress/No stress as ground truth and Stress/No stress as prediction. This confusion matrix is computed from the validation set and the values in the confusion matrix represent a the % of the data of the validation set.
 
 For the best model of each fold the two confusions matrixes are computed on the validation set and the average model confusion matrixes are computed.
 
@@ -158,4 +152,6 @@ The best model gives the following confusion matrixes for the testing set (Subje
 * **F1 score** = 0.920
 
 ## References
-<a id="1">[1]</a> Philip Schmidt et al. “Introducing WeSAD, a multimodal dataset for wearable stress and affect detection”. In: ICMI 2018 - Proceedings of the 2018 International Conference on Multimodal Interaction (Oct. 2018), pp. 400–408. doi: <a href="https://doi.org/10.1145/3242969.3242985">10.1145/3242969.3242985</a>.
+<a id="1">[1]</a> Marco Pedrotti et al. “Automatic Stress Classification With Pupil Diameter Analysis”. In:
+International Journal of Human-Computer Interaction 30 (3 Mar. 2014), pp. 220–236. issn:
+10447318. doi: <a href="https://doi.org/10.1080/10447318.2013.848320">10.1080/10447318.2013.848320</a> </a>.
