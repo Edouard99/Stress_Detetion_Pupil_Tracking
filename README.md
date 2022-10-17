@@ -5,6 +5,7 @@
 * [Model and Training](#model-and-training)
 * [Cross Validation Results](#cross-validation-results)
 * [Results on testing set](#results-on-testing-set)
+* [What's next ?](#whats-next)
 * [References](#references)
 
 ## Introduction
@@ -71,6 +72,8 @@ Subjects for training and validation has been permuted as I planned to use K-fol
 
 ## Model and Training
 
+The training and results analysis of the model can be done using the notebooks <a href="./Pd_calissifer.ipynb">Pd_calissifer.ipynb</a>.
+
 My model is a Full Connected Neural Network. Each Full Connected (FC) layer is followed by a Batch Normalization layer, a Dropout(p= 0.4) layer and a LeakyRelu (a=0.2) layer. <br> The size of these layer decreases from 128 &#8594; 64 &#8594; 16 &#8594; 4 &#8594; 1. The final FC layer is followed by a Sigmoid function in order to obtain an output &#8712; [0;1]. 
 
 The input size is 125 and the output size is 1. An output > *a-given-threshold* is considered as a stress state.
@@ -90,6 +93,8 @@ For each fold (of the 195-fold) the model has been trained with :
 For each fold training the best model has been saved (based on validation set loss value) to compute the results of the cross validation.
 
 ## Cross Validation Results
+
+The **threshold** to predict stress or not is set to 0.35 after cross validation results analysis.
 
 Confusion Matrix used is a 2x2 confusion matrix with Stress/No stress as ground truth and Stress/No stress as prediction. This confusion matrix is computed from the validation set and the values in the confusion matrix represent a the % of the data of the validation set.
 
@@ -117,39 +122,70 @@ The average metrics of my model are :
 
 | Metrics      | Mean &#177; Std|
 |:-------------:|:-------------:|
-|Accuracy | 0.920 &#177; 0.06|
-|Precision| 0.804 &#177; 0.132|
-|Recall| 0.845 &#177; 0.183|
-|F1 score| 0.818 &#177; 0.148|
+|Accuracy | 0.711 &#177; 0.132|
+|Precision| 0.526 &#177; 0.171|
+|Recall| 0.699 &#177; 0.263|
+|F1 score| 0.584 &#177; 0.19|
 
 </div>
 
-The WESAD paper [[1]](#1) best result on only ECG signals from chest (using Linear Discriminant Analysis) gives:
+Firstly it is interesting to analyse the accuracy distribution, it appears that for some subject the model is really not working properly with a really low accuracy, for others the model works quite well, one explaination would be that some subject's pupil diameter may be not responsive to stress situation. One other could be that the t1 task (driving normally) already induced stress for the subject and then for t2,t3 and t4 the subject got used to the driving task and was on a same level of stress as in t1 because of the stressing factors. This explain why it is important to use cross valdation to validate the model.
+
+Then we can see that the precision and f1 score have a quite low average, this can be explained because the dataset of validation are unbalanced (1 control subject = 5 non stressed extracts, 1 experimental subject = 2 non stressed extracts and 3 stressed extract). A validation set is made of 70% of non stressed data and 30% of stressed data and this explain why the precision is low.
+Supposing that the model will give the same results on a balanced dataset, we could predict a confusion matrix as (a real training and validation with balanced dataset will be done in the future):
+
+</p><p align="center">
+  <img alt="Theorical Confusion Matrix" title="F1 Score" src="./Media/theorical confusion.png">
+</p>
+
+Such confusion matrix would give :
 
 <div align="center">
 
 | Metrics      | Mean Value|
 |:-------------:|:-------------:|
-|Accuracy | 0.8544|
-|F1 score| 0.8131|
+|Accuracy | 0.7076|
+|Precision | 0.7115|
+|Recall | 0.6986|
+|F1 score| 0.7050|
 
 </div>
 
-My Deep Learning model has an accuracy increased by **6.56%** and an f1 score increased by **0.49%**.
+The Pedrotti's paper [[1]](#1) did not used the same model and data treatment, however it is interesting to compare our methods. In their paper they use the Wavelet transform on 80s extract while we are only using 40s extract in our work. More over there is no cross validation process in their training, 6 subjects from the experiment set are selected to be the validation set. Finally they use a different model and train with a low ammount of data (not using t0 for example). I computed accuracy for a stress classifier like we would like to obtain from their model results:
+
+<div align="center">
+
+| Metrics      | Mean Value|
+|:-------------:|:-------------:|
+|Accuracy | 0.9166|
+|Precision | 0.6666|
+|Recall | 1.0000|
+|F1 score| 0.7995|
+
+</div>
+
+
+My Deep Learning model has a lower performances, yet I believe that the cross-validation that I have done gives safer results because I validated on each subject.
 
 ## Testing Results
 
-The model has been retrained with the same process on the complete cross validation dataset (training + validation) to be tested on new data (subject 17 data).
-The best model gives the following confusion matrixes for the testing set (Subject S17):
+The model has been retrained with the same process on the complete cross validation dataset (training + validation) to be tested on new data (subject 12 data).
+The best model gives the following confusion matrixes for the testing set (Subject S12):
 
 <p align="center">
   <img alt="Confusion Matrix on Testing set" title="Confusion Matrix on Testing set" src="./Media/testing confusion.png">
 </p>
 
-* **Accuracy** = 0.957
-* **Precision** = 0.851
+* **Accuracy** = 0.8829
+* **Precision** = 0.8367
 * **Recall** = 1.00
-* **F1 score** = 0.920
+* **F1 score** = 0.9111
+
+Here we can see that the model performed really well on Subject 12 data.
+
+## What's next ?
+
+I would like to continue to work on that model to improve it. My next task will be to train it with a balanced data set and analyze the data of subject on who the model performs really bad.
 
 ## References
 <a id="1">[1]</a> Marco Pedrotti et al. “Automatic Stress Classification With Pupil Diameter Analysis”. In:
