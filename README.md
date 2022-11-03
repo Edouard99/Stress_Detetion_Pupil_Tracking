@@ -32,7 +32,7 @@ Among the measures, the dataset contains pupil size measures of 17 subjects from
 
 
 <p align="center">
-  <img alt="ECG Sample" title="ECG Sample" src="./Media/experiment_presentation.PNG">
+  <img alt="Experiment presentation" title="Experiment Presentation" src="./Media/experiment_presentation.PNG">
 </p>
 
 
@@ -47,7 +47,7 @@ The training has been done with a cross-validation process. I extracted features
 
 
 <p align="center">
-  <img alt="ECG Sample" title="ECG Sample" src="./Media/experiment_classification.PNG">
+  <img alt="Experiment classification" title="Experiment classification" src="./Media/experiment_classification.PNG">
 </p>
 
 
@@ -58,7 +58,7 @@ $$ Pd_{normalized}(t)= Pd(t)-\overline{Pd_{Baseline}}$$
 Then from each 40s (2000 points) signal, I extracted a 125 points feature vector by applying a discrete wavelet transform with 4 levels and with Haar's window. Finally, each 125 points feature vector was normalized by the average mean and the average standard deviation of all the 125 vectors in the dataset. By doing this we ensure that our dataset is normalized.
 
 <p align="center">
-  <img alt="ECG Sample" title="ECG Sample" src="./Media/pre_processing.PNG">
+  <img alt="Data preprocessing" title="Data preprocessing" src="./Media/pre_processing.PNG">
 </p>
 
 
